@@ -15,7 +15,7 @@ class App:
 
     def create_new_tetrimino(self):
         shape = random.choice(list(TETROMINOES.values()))
-        return Tetrimino(shape, width = 90)
+        return Tetrimino(shape, width = 100)
 
     def update(self):
         if self.game_over:
@@ -43,6 +43,7 @@ class App:
 
 
     def check_collision(self, tetrimino, direction):
+        _collided = False
         future_x = tetrimino.x //10
         future_y = tetrimino.y //10
 
@@ -55,16 +56,18 @@ class App:
 
         for y, row in enumerate(tetrimino.shape):
             for x, cell in enumerate(row):
-                if cell:
-                    new_x = future_x + x//10
-                    new_y = future_y + y//10
-                    print(new_x, new_y, len(self.game_field[0]), len(self.game_field))
-                    if new_x < 0 or new_x >= self.width or new_y >= self.height or self.game_field[new_y][new_x]:
-                        print(tetrimino, x, y)
-                        return True  # 衝突が発生
-                    else:
-                        print("ok!")
-                        return False  # 衝突なし
+                # if cell in [0, 1]:
+                new_x = future_x + x
+                new_y = future_y + y
+                print(new_x, new_y, len(self.game_field[0]), len(self.game_field))
+                if new_x < 0 or new_x >= self.width//10 or new_y >= self.height//10 or self.game_field[new_y][new_x]:
+                    print(tetrimino, x, y)
+                    _collided = True
+                    return True
+                else:
+                    print("ok!")
+        
+        return False
     
     def move_tetrimino(self, tetrimino, direction):
         if direction == "left":
