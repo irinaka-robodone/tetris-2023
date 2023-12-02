@@ -6,31 +6,32 @@ class App:
     def __init__(self):
         self.width = 120
         self.height = 160
+        self.field = [[0] * self.width for _ in range(self.height)]
         self.tetrimino = self.create_new_tetrimino()
         self.game_over = False
         self.game_field = [[False for _ in range(0, self.width, 10)] for _ in range(0, self.height, 10)]
+        self.drop_speed = 45
+        self.drop_counter = 0
+        self.tetrimino_locked = False
+        self.frame_count = 0
+        self.frame_delay = 10  # テトリミノが固定されるまでのフレーム数
+        self.tetriminos = []  # 画面上のテトリミノを保持するリスト
+        
 
-        pyxel.init(self.width, self.height)
+        pyxel.init(self.width, self.height, title = "テトリス")
         pyxel.run(self.update, self.draw)
 
     def create_new_tetrimino(self):
         shape = random.choice(list(TETROMINOES.values()))
         return Tetrimino(shape, width = 100)
 
-    def update(self):
-        if self.game_over:
-            return
 
-        if pyxel.btnp(pyxel.KEY_DOWN):
-            pass
-        #if not check_collision(self.tetrimino, "down"):
-        #	move_tetrimino(self.tetrimino, "down")
-
-    # キー入力による左右、回転の操作をここに追加
-
+    
     def draw(self):
         pyxel.cls(7)
-    #pyxel.rect(0,0,10,10,1)
+        #pyxel.rect(0,0,10,10,1)
+        for tetrimino in self.tetriminos:
+            self.draw_tetrimino(tetrimino)
         self.draw_tetrimino(self.tetrimino)
 
     def draw_tetrimino(self, tetrimino):
@@ -38,7 +39,8 @@ class App:
             # print(tetrimino.shape)
             for x, cell in enumerate(row):
                 if cell:
-                    print("cell:", cell)
+                    screen_x = tetrimino.x + x
+                    screen_y = tetrimino.y + y
                     pyxel.rect((tetrimino.x + x *10 ), (tetrimino.y + y * 10), 10, 10, 1)
 
 
@@ -64,6 +66,8 @@ class App:
                     print(tetrimino, x, y)
                     _collided = True
                     return True
+                if self.field[new_y][new_x]:  # ほかのテトリミノに衝突
+                    return True
                 else:
                     print("ok!")
         
@@ -79,20 +83,53 @@ class App:
 
     def update(self):
         if self.game_over:
-            #return
-            pass
-        if pyxel.btnp(pyxel.KEY_DOWN):
+            return
+        
+        # テトリミノの下矢印キーの落下処理
+        self.drop_counter += 1
+        if pyxel.btn(pyxel.KEY_DOWN):
+            self.drop_speed = 15
+        else:
+            self.drop_speed = 45
+        
+        # テトリミノの自動落下処理
+        self.drop_counter += 1
+        if self.drop_counter > self.drop_speed:
             if not self.check_collision(self.tetrimino, "down"):
                 self.move_tetrimino(self.tetrimino, "down")
+            else:
+                # 衝突があった場合、テトリミノを固定して新しいテトリミノを生成
+                # この部分はゲームのロジックに応じて実装
+                pass
+            self.drop_counter = 0
 
         # テトリミノを左に移動
-        if pyxel.btnp(pyxel.KEY_LEFT):
-            if not self.check_collision(self.tetrimino, "left"):
-                self.move_tetrimino(self.tetrimino, "left")
-        # テトリミノを右に移動
-        if pyxel.btnp(pyxel.KEY_RIGHT):
-            if not self.check_collision(self.tetrimino, "right"):
-                self.move_tetrimino(self.tetrimino, "right")
+        if not self.tetrimino_locked:
+            if pyxel.btnp(pyxel.KEY_LEFT):
+                if not self.check_collision(self.tetrimino, "left"):
+                    self.move_tetrimino(self.tetrimino, "left")
+            # テトリミノを右に移動
+            if pyxel.btnp(pyxel.KEY_RIGHT):
+                if not self.check_collision(self.tetrimino, "right"):
+                    self.move_tetrimino(self.tetrimino, "right")
+        # テトリミノが床に達した時の確認
+        if self.check_collision(self.tetrimino,"down"):
+            # テトリミノが底に達したので固定する
+            self.tetrimino_locked = True
+            # 新しいテトリミノの生成などの処理
+            self.tetrimino = self.create_new_tetrimino()
+            self.tetrimino_locked = False
+            self.tetriminos.append(self.tetrimino)
+    #    """ テトリミノをゲームフィールドに固定する """
+    #    def place_tetrimino(self):
+    #        for y, row in enumerate(self.tetrimino.shape):
+    #            for x, cell in enumerate(row):
+    #                if cell:
+    #                    field_x = self.tetrimino.x + x
+    #                    field_y = self.tetrimino.y + y
+    #                    if 0 <= field_x < self.width and 0<= field_y < self.height:
+    #                        self.field[field_y][field_x] = 1  # フィールドにテトリミノを追加
+    
 
 
 
