@@ -9,7 +9,7 @@ class App:
         self.field = [[0] * self.width for _ in range(self.height)]
         self.tetrimino = self.create_new_tetrimino()
         self.game_over = False
-        self.game_field = [[False for _ in range(0, self.width, 10)] for _ in range(0, self.height, 10)]
+        self.game_field = [[0 for _ in range(0, self.width, 10)] for _ in range(0, self.height, 10)]
         self.drop_speed = 45
         self.drop_counter = 0
         self.tetrimino_locked = False
@@ -22,8 +22,10 @@ class App:
         pyxel.run(self.update, self.draw)
 
     def create_new_tetrimino(self):
-        shape = random.choice(list(TETROMINOES.values()))
-        return Tetrimino(shape, width = 100)
+        letter = str(random.choice(list(TETROMINOES.keys())))
+        shape = TETROMINOES[letter]
+        color = TETROMINOES_COLORS[letter]
+        return Tetrimino(shape, 100, color)
 
 
     
@@ -36,16 +38,15 @@ class App:
 
     def draw_tetrimino(self, tetrimino):
         for y, row in enumerate(tetrimino.shape):
-            # print(tetrimino.shape)
             for x, cell in enumerate(row):
                 if cell:
                     screen_x = tetrimino.x + x
                     screen_y = tetrimino.y + y
-                    pyxel.rect((tetrimino.x + x *10 ), (tetrimino.y + y * 10), 10, 10, 1)
+                    pyxel.rect((tetrimino.x + x *10 ), (tetrimino.y + y * 10), 10, 10, tetrimino.color)
 
 
     def check_collision(self, tetrimino, direction):
-        _collided = False
+        self.collided = False
         future_x = tetrimino.x //10
         future_y = tetrimino.y //10
 
@@ -61,15 +62,13 @@ class App:
                 # if cell in [0, 1]:
                 new_x = future_x + x
                 new_y = future_y + y
-                print(new_x, new_y, len(self.game_field[0]), len(self.game_field))
                 if new_x < 0 or new_x >= self.width//10 or new_y >= self.height//10 or self.game_field[new_y][new_x]:
-                    print(tetrimino, x, y)
-                    _collided = True
+                    self.collided = True
                     return True
-                if self.field[new_y][new_x]:  # ほかのテトリミノに衝突
+                if self.game_field[new_y][new_x]:  # ほかのテトリミノに衝突
                     return True
                 else:
-                    print("ok!")
+                    pass
         
         return False
     
@@ -117,6 +116,11 @@ class App:
             # テトリミノが底に達したので固定する
             self.tetrimino_locked = True
             # 新しいテトリミノの生成などの処理
+            #for y, row in enumerate(tetrimino.shape):
+            #    for x, cell in enumerate(row):
+            #        if cell:
+            #            self.field[tetrimino.y + y][tetrimino.x + x] = 1
+            self.place_tetrimino(self.tetrimino)
             self.tetrimino = self.create_new_tetrimino()
             self.tetrimino_locked = False
             self.tetriminos.append(self.tetrimino)
@@ -129,6 +133,15 @@ class App:
     #                    field_y = self.tetrimino.y + y
     #                    if 0 <= field_x < self.width and 0<= field_y < self.height:
     #                        self.field[field_y][field_x] = 1  # フィールドにテトリミノを追加
+    
+    def place_tetrimino(self,tetrimino):
+        """テトリミノをゲームフィールドに固定"""
+        for y, row in enumerate(tetrimino.shape):
+            for x, cell in enumerate(row):
+                if cell:
+                    self.game_field[(tetrimino.y + y)//10][(tetrimino.x + x)//10] = 1
+                    print(self.game_field)
+    
     
 
 

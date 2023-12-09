@@ -17,8 +17,18 @@ TETROMINOES = {
           [1, 1, 1]]
 }
 
+TETROMINOES_COLORS = {
+    'S': 3,
+    'J': 5,
+    'Z': 8,
+    'T': 2,
+    'O': 10,
+    'I': 12,
+    'L': 9
+}
 class Tetrimino:
-    def __init__(self, shape, width):
-        self.shape = shape
-        self.x = width // 2
-        self.y = 0
+	def __init__(self, shape, width, color):
+		self.shape = shape
+		self.color = color
+		self.x = width // 2
+		self.y = 0
