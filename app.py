@@ -59,16 +59,17 @@ class App:
 
         for y, row in enumerate(tetrimino.shape):
             for x, cell in enumerate(row):
-                # if cell in [0, 1]:
-                new_x = future_x + x
-                new_y = future_y + y
-                if new_x < 0 or new_x >= self.width//10 or new_y >= self.height//10 or self.game_field[new_y][new_x]:
-                    self.collided = True
-                    return True
-                if self.game_field[new_y][new_x]:  # ほかのテトリミノに衝突
-                    return True
-                else:
-                    pass
+                if cell == 1:
+                    new_x = future_x + x
+                    new_y = future_y + y
+                    if new_x < 0 or new_x >= self.width//10 or new_y >= self.height//10 or self.game_field[new_y][new_x]:
+                        self.collided = True
+                        return True
+                    if self.game_field[new_y][new_x]:  # ほかのテトリミノに衝突
+                        #self.collided = True
+                        return True
+                    else:
+                        pass
         
         return False
     
@@ -79,6 +80,15 @@ class App:
             tetrimino.x += 10  # X座標を増やして右に移動
         elif direction == "down":
             tetrimino.y += 10  # Y座標を増やして下に移動
+    
+    def rotate_tetrimino(self, tetrimino, direction):
+        """ テトリミノを回転させる """
+        if direction == "right":
+            # 右回転 (時計回り)
+            tetrimino.shape = list(zip(*tetrimino.shape[::-1]))
+        elif direction == "left":
+            # 左回転 (反時計回り)
+            tetrimino.shape = list(zip(*tetrimino.shape))[::-1]
 
     def update(self):
         if self.game_over:
@@ -104,6 +114,8 @@ class App:
 
         # テトリミノを左に移動
         if not self.tetrimino_locked:
+            for key in pyxel.input_keys:
+                print(key)
             if pyxel.btnp(pyxel.KEY_LEFT):
                 if not self.check_collision(self.tetrimino, "left"):
                     self.move_tetrimino(self.tetrimino, "left")
@@ -111,6 +123,15 @@ class App:
             if pyxel.btnp(pyxel.KEY_RIGHT):
                 if not self.check_collision(self.tetrimino, "right"):
                     self.move_tetrimino(self.tetrimino, "right")
+            # テトリミノを右回転
+            if pyxel.btnp(pyxel.KEY_RSHIFT):
+                if not self.check_collision(self.tetrimino, "rotate"):
+                    self.rotate_tetrimino(self.tetrimino, "right")
+            # テトリミノを左回転
+            if pyxel.btnp(pyxel.KEY_SLASH):
+                if not self.check_collision(self.tetrimino, "rotate"):
+                    self.rotate_tetrimino(self.tetrimino, "left")
+
         # テトリミノが床に達した時の確認
         if self.check_collision(self.tetrimino,"down"):
             # テトリミノが底に達したので固定する
@@ -120,27 +141,26 @@ class App:
             #    for x, cell in enumerate(row):
             #        if cell:
             #            self.field[tetrimino.y + y][tetrimino.x + x] = 1
+            self.tetriminos.append(self.tetrimino)
             self.place_tetrimino(self.tetrimino)
             self.tetrimino = self.create_new_tetrimino()
             self.tetrimino_locked = False
-            self.tetriminos.append(self.tetrimino)
-    #    """ テトリミノをゲームフィールドに固定する """
-    #    def place_tetrimino(self):
-    #        for y, row in enumerate(self.tetrimino.shape):
-    #            for x, cell in enumerate(row):
-    #                if cell:
-    #                    field_x = self.tetrimino.x + x
-    #                    field_y = self.tetrimino.y + y
-    #                    if 0 <= field_x < self.width and 0<= field_y < self.height:
-    #                        self.field[field_y][field_x] = 1  # フィールドにテトリミノを追加
-    
+        """ テトリミノをゲームフィールドに固定する """
+    # def place_tetrimino(self):
+    #     for y, row in enumerate(self.tetrimino.shape):
+    #         for x, cell in enumerate(row):
+    #             if cell:
+    #                 field_x = self.tetrimino.x + x
+    #                 field_y = self.tetrimino.y + y
+    #                 if 0 <= field_x < self.width and 0<= field_y < self.height:
+    #                     self.field[field_y][field_x] = 1  # フィールドにテトリミノを追加
+        
     def place_tetrimino(self,tetrimino):
         """テトリミノをゲームフィールドに固定"""
         for y, row in enumerate(tetrimino.shape):
             for x, cell in enumerate(row):
-                if cell:
-                    self.game_field[(tetrimino.y + y)//10][(tetrimino.x + x)//10] = 1
-                    print(self.game_field)
+                if  cell == 1:
+                    self.game_field[(tetrimino.y//10 + y)][(tetrimino.x//10 + x)] = 1
     
     
 
