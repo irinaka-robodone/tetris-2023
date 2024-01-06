@@ -120,9 +120,12 @@ class App:
         for y in reversed(rows_to_clear):
             # 埋まった行を削除し、上の行を下にずらす
             del self.game_field[y]
-            self.game_field.insert(0, [0 for _ in range(self.widh // 10)])
+            self.game_field.insert(0, [0 for _ in range(self.width // 10)])
             # スコアを更新する
             self.score += 150
+            
+            for row in self.game_field:
+                print(row)
 
     def update(self):
         if self.game_over:
@@ -150,8 +153,8 @@ class App:
 
         # テトリミノを左に移動
         if not self.tetrimino_locked:
-            for key in pyxel.input_keys:
-                print(key)
+            # for key in pyxel.input_keys:
+                # print(key)
             if pyxel.btnp(pyxel.KEY_LEFT):
                 if not self.check_collision(self.tetrimino, "left"):
                     self.move_tetrimino(self.tetrimino, "left")
