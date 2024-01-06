@@ -11,14 +11,17 @@ class App:
         self.tetrimino = self.create_new_tetrimino()
         self.game_over = False
         self.game_field = [[0 for _ in range(0, self.width, 10)] for _ in range(0, self.height, 10)]
-        self.drop_speed = 45
+        self.drop_speed_base = 45
+        self.drop_speed = self.drop_speed_base
         self.drop_counter = 0
         self.tetrimino_locked = False
         self.frame_count = 0
         self.frame_delay = 10  # テトリミノが固定されるまでのフレーム数
         self.tetriminos = []  # 画面上のテトリミノを保持するリスト
         self.score = 0
+        self.level = 1
         self.start_time = time.time()
+        self.key_down = 0
         
 
         pyxel.init(self.width, self.height, title = "テトリス")
@@ -35,8 +38,7 @@ class App:
     def draw(self):
         pyxel.cls(0)
         #pyxel.rect(0,0,10,10,1)
-        for tetrimino in self.tetriminos:
-            self.draw_tetrimino(tetrimino)
+        self.draw_game_field()
         self.draw_tetrimino(self.tetrimino)
         # スコアとプレイ時間の描画
         self.draw_score_and_time()
@@ -48,9 +50,17 @@ class App:
         
         # スコアとプレイ時間を右サイドに表示
         pyxel.text(5, 5, f"Score: {self.score}", pyxel.COLOR_WHITE)
-        pyxel.text(5, 15, f"Time: {play_time} sec", pyxel.COLOR_WHITE)
+        pyxel.text(5, 15, f"Level: {self.level} Level", pyxel.COLOR_WHITE)
+        pyxel.text(5, 25, f"Time: {play_time} sec", pyxel.COLOR_WHITE)
     
-
+    
+    def draw_game_field(self):
+        """ ゲームフィールドを描画する """
+        for y, row in enumerate(self.game_field):
+            for x, cell in enumerate(row):
+                if cell:
+                    pyxel.rect(x * 10, y * 10, 10, 10, cell)
+    
     def draw_tetrimino(self, tetrimino):
         for y, row in enumerate(tetrimino.shape):
             for x, cell in enumerate(row):
@@ -121,11 +131,11 @@ class App:
             # 埋まった行を削除し、上の行を下にずらす
             del self.game_field[y]
             self.game_field.insert(0, [0 for _ in range(self.width // 10)])
-            # スコアを更新する
+            # スコアとレベルを更新する
             self.score += 150
-            
-            for row in self.game_field:
-                print(row)
+            self.level += 1
+            self.drop_speed_base = 45 / self.level
+    
 
     def update(self):
         if self.game_over:
@@ -133,12 +143,12 @@ class App:
         
         self.check_and_clear_rows()
         
-        # テトリミノの下矢印キーの落下処理
+        # テトリミノの下矢印キーの落下速度処理
         self.drop_counter += 1
         if pyxel.btn(pyxel.KEY_DOWN):
-            self.drop_speed = 15
+            self.drop_speed = self.drop_speed_base / 5
         else:
-            self.drop_speed = 45
+            self.drop_speed = self.drop_speed_base
         
         # テトリミノの自動落下処理
         self.drop_counter += 1
@@ -199,7 +209,7 @@ class App:
         for y, row in enumerate(tetrimino.shape):
             for x, cell in enumerate(row):
                 if  cell == 1:
-                    self.game_field[(tetrimino.y//10 + y)][(tetrimino.x//10 + x)] = 1
+                    self.game_field[(tetrimino.y//10 + y)][(tetrimino.x//10 + x)] = tetrimino.color
     
     
 
