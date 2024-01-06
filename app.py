@@ -1,5 +1,6 @@
 import pyxel
 from utils import *
+import time
 
 
 class App:
@@ -16,6 +17,8 @@ class App:
         self.frame_count = 0
         self.frame_delay = 10  # テトリミノが固定されるまでのフレーム数
         self.tetriminos = []  # 画面上のテトリミノを保持するリスト
+        self.score = 0
+        self.start_time = time.time()
         
 
         pyxel.init(self.width, self.height, title = "テトリス")
@@ -30,11 +33,23 @@ class App:
 
     
     def draw(self):
-        pyxel.cls(7)
+        pyxel.cls(0)
         #pyxel.rect(0,0,10,10,1)
         for tetrimino in self.tetriminos:
             self.draw_tetrimino(tetrimino)
         self.draw_tetrimino(self.tetrimino)
+        # スコアとプレイ時間の描画
+        self.draw_score_and_time()
+    
+    def draw_score_and_time(self):
+        # 現在のプレイ時間を計算
+        current_time = time.time()
+        play_time = int(current_time - self.start_time)
+        
+        # スコアとプレイ時間を右サイドに表示
+        pyxel.text(5, 5, f"Score: {self.score}", pyxel.COLOR_WHITE)
+        pyxel.text(5, 15, f"Time: {play_time} sec", pyxel.COLOR_WHITE)
+    
 
     def draw_tetrimino(self, tetrimino):
         for y, row in enumerate(tetrimino.shape):
@@ -45,10 +60,11 @@ class App:
                     pyxel.rect((tetrimino.x + x *10 ), (tetrimino.y + y * 10), 10, 10, tetrimino.color)
 
 
-    def check_collision(self, tetrimino, direction):
+    def check_collision(self, tetrimino, direction, rotated_shape=None):
         self.collided = False
         future_x = tetrimino.x //10
         future_y = tetrimino.y //10
+        shape_to_check = rotated_shape if rotated_shape is not None else tetrimino.shape
 
         if direction == "down":
             future_y += 1
@@ -57,7 +73,7 @@ class App:
         elif direction == "right":
             future_x += 1
 
-        for y, row in enumerate(tetrimino.shape):
+        for y, row in enumerate(shape_to_check):
             for x, cell in enumerate(row):
                 if cell == 1:
                     new_x = future_x + x
@@ -85,14 +101,34 @@ class App:
         """ テトリミノを回転させる """
         if direction == "right":
             # 右回転 (時計回り)
-            tetrimino.shape = list(zip(*tetrimino.shape[::-1]))
+            rotated_shape = list(zip(*tetrimino.shape[::-1]))
         elif direction == "left":
             # 左回転 (反時計回り)
-            tetrimino.shape = list(zip(*tetrimino.shape))[::-1]
+            rotated_shape = list(zip(*tetrimino.shape))[::-1]
+        
+        # 回転後の衝突をチェック
+        if not self.check_collision(tetrimino, None, rotated_shape):
+            tetrimino.shape = rotated_shape
+        
+    def check_and_clear_rows(self):
+        # 埋まった行を探す
+        rows_to_clear = []
+        for y, row in enumerate(self.game_field):
+            if all(cell for cell in row):
+                rows_to_clear.append(y)
+        
+        for y in reversed(rows_to_clear):
+            # 埋まった行を削除し、上の行を下にずらす
+            del self.game_field[y]
+            self.game_field.insert(0, [0 for _ in range(self.widh // 10)])
+            # スコアを更新する
+            self.score += 150
 
     def update(self):
         if self.game_over:
             return
+        
+        self.check_and_clear_rows()
         
         # テトリミノの下矢印キーの落下処理
         self.drop_counter += 1
